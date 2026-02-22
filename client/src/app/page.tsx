@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, ArrowLeft, ArrowRight, Trophy, BookOpen, Video, FileText, Code } from 'lucide-react';
+import { Loader2, ArrowLeft, ArrowRight, Trophy, BookOpen, Video, FileText, Code, X } from 'lucide-react';
 
 const PACES = [
   { id: 'Slow', title: 'Slow', description: 'Take your time, no pressure' },
@@ -45,6 +45,26 @@ export default function Home() {
   
   // Results
   const [curriculum, setCurriculum] = useState<any[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
+  const [searchingQuery, setSearchingQuery] = useState<string | null>(null);
+
+  const handleSearchVideo = async (query: string) => {
+    setSearchingQuery(query);
+    try {
+      const res = await fetch(`http://localhost:4000/api/youtube/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (data.success) {
+        setSelectedVideo(data.data);
+      } else {
+        alert(data.error || "Failed to search video");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error contacting YouTube API");
+    } finally {
+      setSearchingQuery(null);
+    }
+  };
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -274,14 +294,17 @@ export default function Home() {
                     <p className="text-zinc-400 mb-4">{item.description}</p>
                     <div className="bg-black/50 p-3 rounded-lg border border-zinc-800 flex items-center justify-between">
                        <code className="text-sm text-zinc-500">🔍 Suggested Query: {item.searchQuery}</code>
-                       <a 
-                          href={`https://www.youtube.com/results?search_query=${encodeURIComponent(item.searchQuery)}`} 
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-red-500 text-sm font-medium hover:underline flex items-center gap-1"
+                       <button 
+                          onClick={() => handleSearchVideo(item.searchQuery)}
+                          disabled={searchingQuery === item.searchQuery}
+                          className="text-red-500 text-sm font-medium hover:underline flex items-center gap-1 justify-center disabled:opacity-50"
                        >
-                         Search <ArrowRight className="w-3 h-3" />
-                       </a>
+                         {searchingQuery === item.searchQuery ? (
+                           <><Loader2 className="w-3 h-3 animate-spin"/> Loading...</>
+                         ) : (
+                           <>Search <ArrowRight className="w-3 h-3" /></>
+                         )}
+                       </button>
                     </div>
                   </div>
                 </div>
@@ -290,6 +313,47 @@ export default function Home() {
           </motion.div>
         )}
 
+      </AnimatePresence>
+
+      {/* Video Modal */}
+      <AnimatePresence>
+        {selectedVideo && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#11] border border-zinc-800 rounded-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-[#151515]">
+                <h3 className="font-bold text-lg truncate pr-4 text-zinc-100">{selectedVideo.title}</h3>
+                <button onClick={() => setSelectedVideo(null)} className="p-2 hover:bg-zinc-800 rounded-full transition text-zinc-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="w-full bg-black aspect-video relative">
+                <iframe 
+                  width="100%" 
+                  height="100%" 
+                  src={`https://www.youtube.com/embed/${selectedVideo.videoId}?autoplay=1`} 
+                  title="YouTube video player" 
+                  frameBorder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                ></iframe>
+              </div>
+              <div className="p-6 overflow-y-auto bg-[#0a0a0a]">
+                <h4 className="text-sm font-bold text-zinc-300 mb-3 uppercase tracking-wider flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Context / Article Base
+                </h4>
+                <p className="text-zinc-400 text-sm whitespace-pre-wrap leading-relaxed">
+                  {selectedVideo.description}
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
     </main>
   );

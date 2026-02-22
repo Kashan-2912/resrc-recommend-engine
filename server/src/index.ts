@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import recommendRouter from './routes/recommend';
+import youtubeRouter from './routes/youtube';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/recommend', recommendRouter);
+app.use('/api/youtube', youtubeRouter);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
