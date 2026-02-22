@@ -4,7 +4,7 @@ const router = Router();
 
 router.get('/search', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { q } = req.query;
+    const { q, sessionLength } = req.query;
     if (!q || typeof q !== 'string') {
       res.status(400).json({ error: 'Query parameter "q" is required' });
       return;
@@ -21,8 +21,21 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
     searchUrl.searchParams.append('part', 'snippet');
     searchUrl.searchParams.append('q', q);
     searchUrl.searchParams.append('type', 'video');
-    searchUrl.searchParams.append('maxResults', '1');
     searchUrl.searchParams.append('key', apiKey);
+    
+    // Prioritize recent content since tech changes fast.
+    const threeYearsAgo = new Date();
+    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+    searchUrl.searchParams.append('publishedAfter', threeYearsAgo.toISOString());
+    searchUrl.searchParams.append('order', 'relevance');
+    
+    // Maps "Short Sessions" to YouTube's "short" videoDuration filter (< 4 mins)
+    // We could map other parameters if needed, but this prevents 15hr videos for short sessions.
+    if (sessionLength && typeof sessionLength === 'string' && sessionLength.toLowerCase().includes('short')) {
+       searchUrl.searchParams.append('videoDuration', 'short');
+    } else if (sessionLength && typeof sessionLength === 'string' && sessionLength.toLowerCase().includes('dedicated')) {
+       searchUrl.searchParams.append('videoDuration', 'long');
+    }
 
     const searchRes = await fetch(searchUrl.toString());
     const searchData = await searchRes.json();

@@ -51,7 +51,7 @@ export default function Home() {
   const handleSearchVideo = async (query: string) => {
     setSearchingQuery(query);
     try {
-      const res = await fetch(`http://localhost:4000/api/youtube/search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`http://localhost:4000/api/youtube/search?q=${encodeURIComponent(query)}&sessionLength=${encodeURIComponent(sessionLength)}`);
       const data = await res.json();
       if (data.success) {
         setSelectedVideo(data.data);

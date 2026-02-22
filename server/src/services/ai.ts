@@ -14,27 +14,35 @@ export async function generateCurriculum(params: CurriculumParams) {
   const { mainSkill, overallScore, difficultyLevel, learningPace, sessionLength, resourceTypes } = params;
 
   const prompt = `
-You are an expert technical curriculum designer creating a personalized learning path.
-The user wants to learn: ${mainSkill}.
-Their assessment score is: ${overallScore}/10. (A score of 1-4 means beginner, 5-7 means intermediate, 8-10 means advanced).
-Their preferred difficulty level: ${difficultyLevel}.
-Their learning pace: ${learningPace}.
-Their preferred session length: ${sessionLength}.
-Their preferred resource types: ${resourceTypes.join(', ')}.
+You are an expert technical curriculum designer creating a personalized learning path roadmap.
+The user wants to learn exactly this main skill: "${mainSkill}".
+Their assessment score in this skill is: ${overallScore}/10. 
+(A score of 1-4 means they are a Beginner. 5-7 means Intermediate. 8-10 means Advanced.)
 
-Based on their score, focus on fundamentals if low, or advanced edge cases if high.
-Generate a cohesive curriculum consisting of 5 specific, bite-sized modules/topics.
-For each topic, provide a highly specific search query to find the best free resources online. Ensure the resource type matches their preferences.
+Their learning pace is: ${learningPace}.
+Their preferred session length is: ${sessionLength}.
+Their preferred resource types are: ${resourceTypes.join(', ')}.
+
+CRITICAL INSTRUCTIONS:
+1. You must act as a precise roadmap generator. Do not generate random disconnected topics.
+2. The curriculum MUST be in strictly sequential order from start to finish, building upon the previous topic.
+3. If they are a Beginner (Score < 5), start from absolute zero basics of the main skill. Do not skip to advanced features.
+4. If they are Intermediate/Advanced, start from their current level.
+5. Generate exactly 5 bite-sized modules.
+
+For the "searchQuery" field, provide a highly specific string that will yield the exact right tutorial on YouTube or Google.
+To ensure the content is modern and up-to-date, implicitly include terms like "${new Date().getFullYear()}" or "modern" in the search query where it makes sense.
+For example, if the topic is "React Functional Components", the searchQuery should be "Modern React JS functional components tutorial ${new Date().getFullYear()} for beginners ${sessionLength.includes('Short') ? 'under 10 minutes' : ''}".
 
 You MUST respond in strictly valid JSON format matching the following structure:
 {
   "curriculum": [
     {
-      "topic": "The title of the learning topic or module",
-      "description": "A short description of what will be learned",
-      "searchQuery": "A YouTube or Google search query optimized to find a resource for this module",
+      "topic": "The exact title of the learning topic or module",
+      "description": "A precise description of what will be learned and why it is next in the sequence",
+      "searchQuery": "A highly targeted YouTube/Google search query optimized for their difficulty and session length",
       "type": "video" | "interactive" | "doc" | "text",
-      "difficultyLevel": "The calculated difficulty level of this specific module"
+      "difficultyLevel": "Beginner | Intermediate | Advanced"
     }
   ]
 }
