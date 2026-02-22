@@ -27,7 +27,8 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
     const threeYearsAgo = new Date();
     threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
     searchUrl.searchParams.append('publishedAfter', threeYearsAgo.toISOString());
-    searchUrl.searchParams.append('order', 'relevance');
+    // Sort by most viewed to recommend famous/high-quality content
+    searchUrl.searchParams.append('order', 'viewCount');
     
     // Maps "Short Sessions" to YouTube's "short" videoDuration filter (< 4 mins)
     // We could map other parameters if needed, but this prevents 15hr videos for short sessions.
