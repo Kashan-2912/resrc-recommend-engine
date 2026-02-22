@@ -42,6 +42,7 @@ export default function Home() {
   const [sessionLength, setSessionLength] = useState(SESSIONS[0].id);
   const [difficulty, setDifficulty] = useState(DIFFICULTIES[0].id);
   const [selectedResources, setSelectedResources] = useState<string[]>(['video', 'interactive']);
+  const [language, setLanguage] = useState<string>('English');
   
   // Results
   const [curriculum, setCurriculum] = useState<any[]>([]);
@@ -51,7 +52,7 @@ export default function Home() {
   const handleSearchVideo = async (query: string) => {
     setSearchingQuery(query);
     try {
-      const res = await fetch(`http://localhost:4000/api/youtube/search?q=${encodeURIComponent(query)}&sessionLength=${encodeURIComponent(sessionLength)}`);
+      const res = await fetch(`http://localhost:4000/api/youtube/search?q=${encodeURIComponent(query)}&sessionLength=${encodeURIComponent(sessionLength)}&language=${encodeURIComponent(language)}`);
       const data = await res.json();
       if (data.success) {
         setSelectedVideo(data.data);
@@ -80,7 +81,8 @@ export default function Home() {
           learningPace,
           sessionLength,
           difficultyLevel: difficulty,
-          resourceTypes: selectedResources
+          resourceTypes: selectedResources,
+          language
         })
       });
       const data = await res.json();
@@ -142,6 +144,21 @@ export default function Home() {
                   onChange={e => setScore(Number(e.target.value))}
                   className="w-full bg-[#0a0a0a] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">Preferred Language</label>
+                <select 
+                  value={language}
+                  onChange={e => setLanguage(e.target.value)}
+                  className="w-full bg-[#0a0a0a] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 appearance-none"
+                >
+                  <option value="English">English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Arabic">Arabic</option>
+                </select>
               </div>
             </div>
             
@@ -274,37 +291,68 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="grid gap-6">
-              {curriculum.map((item, idx) => (
-                <div key={idx} className="bg-[#111] border border-zinc-800 p-6 rounded-2xl flex gap-6 hover:border-zinc-700 transition">
-                  <div className="w-12 h-12 shrink-0 rounded-full bg-red-950/40 text-red-500 border border-red-900/50 flex items-center justify-center font-bold text-lg">
-                    {idx + 1}
+            <div className="relative border-l-2 border-red-900/30 ml-6 space-y-16 pb-12 mt-8">
+              {curriculum.map((master, mIdx) => (
+                <div key={mIdx} className="relative">
+                  {/* Master Node Marker */}
+                  <div className="absolute -left-[35px] top-1 w-16 h-16 rounded-full bg-[#0a0a0a] border border-red-900/50 flex items-center justify-center z-10">
+                     <div className="w-12 h-12 rounded-full bg-red-950 border border-red-500 flex items-center justify-center font-bold text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+                        {mIdx + 1}
+                     </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                       <h3 className="text-xl font-bold text-zinc-100">{item.topic}</h3>
-                       <span className="px-3 py-1 bg-zinc-800 text-xs rounded-full border border-zinc-700 uppercase tracking-wider text-zinc-400 font-medium flex gap-2 items-center">
-                         {item.type === 'video' && <Video className="w-3 h-3"/>}
-                         {item.type === 'interactive' && <Code className="w-3 h-3"/>}
-                         {item.type === 'doc' && <BookOpen className="w-3 h-3"/>}
-                         {item.type === 'text' && <FileText className="w-3 h-3"/>}
-                         {item.type}
-                       </span>
-                    </div>
-                    <p className="text-zinc-400 mb-4">{item.description}</p>
-                    <div className="bg-black/50 p-3 rounded-lg border border-zinc-800 flex items-center justify-between">
-                       <code className="text-sm text-zinc-500">🔍 Suggested Query: {item.searchQuery}</code>
-                       <button 
-                          onClick={() => handleSearchVideo(item.searchQuery)}
-                          disabled={searchingQuery === item.searchQuery}
-                          className="text-red-500 text-sm font-medium hover:underline flex items-center gap-1 justify-center disabled:opacity-50"
-                       >
-                         {searchingQuery === item.searchQuery ? (
-                           <><Loader2 className="w-3 h-3 animate-spin"/> Loading...</>
-                         ) : (
-                           <>Search <ArrowRight className="w-3 h-3" /></>
-                         )}
-                       </button>
+
+                  {/* Master Node Header */}
+                  <div className="pl-10">
+                    <h2 className="text-3xl font-bold text-white mb-2">{master.masterNode}</h2>
+                    <p className="text-zinc-400 mb-8">{master.description}</p>
+                    
+                    {/* Slave Nodes List */}
+                    <div className="grid gap-6 relative">
+                      {master.slaveNodes?.map((item: any, sIdx: number) => (
+                        <div key={sIdx} className="bg-[#111] border border-zinc-800 p-6 rounded-2xl flex gap-6 hover:border-zinc-700 hover:shadow-[0_0_15px_rgba(255,255,255,0.03)] transition relative overflow-hidden group">
+                          {/* Hover highlight stripe */}
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-red-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          
+                          <div className="w-10 h-10 shrink-0 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 flex items-center justify-center font-bold text-sm">
+                            {mIdx + 1}.{sIdx + 1}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-2">
+                               <h3 className="text-xl font-bold text-zinc-100">{item.topic}</h3>
+                               <div className="flex gap-2">
+                                 <span className="px-3 py-1 bg-zinc-900 text-xs rounded-full border border-zinc-800 text-zinc-500">
+                                   {item.difficultyLevel}
+                                 </span>
+                                 <span className="px-3 py-1 bg-zinc-800 text-xs rounded-full border border-zinc-700 uppercase tracking-wider text-zinc-400 font-medium flex gap-2 items-center">
+                                   {item.type === 'video' && <Video className="w-3 h-3"/>}
+                                   {item.type === 'interactive' && <Code className="w-3 h-3"/>}
+                                   {item.type === 'doc' && <BookOpen className="w-3 h-3"/>}
+                                   {item.type === 'text' && <FileText className="w-3 h-3"/>}
+                                   {item.type}
+                                 </span>
+                               </div>
+                            </div>
+                            <p className="text-zinc-400 mb-4">{item.description}</p>
+                            <div className="bg-black/50 p-3 rounded-lg border border-zinc-800 flex items-center justify-between gap-3 overflow-hidden">
+                               <code className="text-sm text-zinc-500 truncate block whitespace-nowrap">
+                                 🔍 {item.searchQuery}
+                               </code>
+                               <button 
+                                  onClick={() => handleSearchVideo(item.searchQuery)}
+                                  disabled={searchingQuery === item.searchQuery}
+                                  className="text-red-500 shrink-0 whitespace-nowrap text-sm font-medium hover:underline flex items-center gap-1 justify-center disabled:opacity-50 ml-auto"
+                               >
+                                 {searchingQuery === item.searchQuery ? (
+                                   <><Loader2 className="w-3 h-3 animate-spin"/> Loading...</>
+                                 ) : (
+                                   <>Search Video <ArrowRight className="w-3 h-3" /></>
+                                 )}
+                               </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

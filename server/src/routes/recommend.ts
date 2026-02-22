@@ -5,7 +5,7 @@ const router = Router();
 
 router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { mainSkill, overallScore, difficultyLevel, learningPace, sessionLength, resourceTypes } = req.body;
+    const { mainSkill, overallScore, difficultyLevel, learningPace, sessionLength, resourceTypes, language } = req.body;
 
     if (!mainSkill) {
       res.status(400).json({ error: 'mainSkill is required' });
@@ -19,6 +19,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       learningPace,
       sessionLength,
       resourceTypes,
+      language: language || 'English'
     });
 
     res.status(200).json({ success: true, curriculum });

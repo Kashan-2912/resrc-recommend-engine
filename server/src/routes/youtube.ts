@@ -4,7 +4,7 @@ const router = Router();
 
 router.get('/search', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { q, sessionLength } = req.query;
+    const { q, sessionLength, language } = req.query;
     if (!q || typeof q !== 'string') {
       res.status(400).json({ error: 'Query parameter "q" is required' });
       return;
@@ -22,6 +22,21 @@ router.get('/search', async (req: Request, res: Response): Promise<void> => {
     searchUrl.searchParams.append('q', q);
     searchUrl.searchParams.append('type', 'video');
     searchUrl.searchParams.append('key', apiKey);
+    
+    // Ensure we only grab videos in the requested language
+    if (language && typeof language === 'string') {
+      const langCodeMap: Record<string, string> = {
+        'English': 'en',
+        'Spanish': 'es',
+        'Hindi': 'hi',
+        'French': 'fr',
+        'German': 'de',
+        'Arabic': 'ar'
+      };
+      
+      const code = langCodeMap[language] || 'en';
+      searchUrl.searchParams.append('relevanceLanguage', code);
+    }
     
     // Prioritize recent content since tech changes fast.
     const threeYearsAgo = new Date();
